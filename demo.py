@@ -12,6 +12,8 @@ if __name__ == '__main__':
     text = '人们通常只关注味道甜美的枇杷，很少会注意到其貌不扬的枇杷叶'
     conf = configparser.ConfigParser()
     conf.read("./conf.ini")
+
+    ds = Dataset(conf)
     td = TokenizeData()
     nt = NgramTransform()
     tokenizer = tokenize.get_class('corenlp')()

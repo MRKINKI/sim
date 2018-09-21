@@ -13,7 +13,7 @@ class BuildTfidf:
         self.hash_size = int(math.pow(2, 24))
         self.idx2id = {}
 
-    def get_count_matrix(self, corpus, id_key='id', text_key='text_ngrams'):
+    def get_count_matrix(self, corpus, id_key, text_key):
         row, col, data = [], [], []
         for idx, sample in enumerate(corpus):
             self.idx2id[idx] = sample[id_key]
@@ -55,8 +55,8 @@ class BuildTfidf:
         norm_tfidf_matrix = norm_matrix.dot(tfidf_matrix)
         return norm_tfidf_matrix
 
-    def build(self, corpus, metadata_file):
-        count_matrix = self.get_count_matrix(corpus)
+    def build(self, corpus, metadata_file, id_key, text_key):
+        count_matrix = self.get_count_matrix(corpus, id_key, text_key)
         tfidf_matrix, freqs = self.get_tfidf_matrix(count_matrix)
         tfidf_matrix = self.matrix_norm(tfidf_matrix)
         metadata = {
