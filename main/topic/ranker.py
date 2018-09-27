@@ -9,6 +9,13 @@ class TopicRanker:
     def idx2id(self, idx, field):
         return self.model[field]['idx2id'][idx]
 
+    @staticmethod
+    def multi(vectors):
+        m = np.ones(len(vectors[0]))
+        for vector in vectors:
+            m = np.multiply(m, vector)
+        return m
+
     def rank(self, words, field, k=1):
         lda_index = self.model[field]['lda_index']
         spvec = self.text2spvec(words, field)
@@ -16,13 +23,29 @@ class TopicRanker:
         sorted_sims = sorted(enumerate(sims.squeeze()), key=lambda f: -f[1])
         return sorted_sims[:k]
 
-    def batch_closest_patterns(self, queries, k=1, num_workers=None):
-        with ThreadPool(num_workers) as threads:
-            closest_docs = partial(self.closest_patterns, k=k)
-            results = threads.map(closest_docs, queries)
-        return results
-
     def rank_from_text(self, words, field, topk=5):
+        cands = []
+        dictionary = self.model[field]['dictionary']
+        doc_topic_matrix = self.model[field]['doc_topic_matrix']
+        term_topic_matrix = self.model[field]['term_topic_matrix']
+        # print(words)
+        query_bow = [dictionary.doc2bow(words)]
+        term_idxes = [t[0] for t in query_bow[0]]
+
+        if not len(term_idxes):
+            return cands
+
+        sub_term_topic = term_topic_matrix[term_idxes]
+        word_doc_topic_related_matrix = sub_term_topic.dot(doc_topic_matrix.T)
+        sims = self.multi(word_doc_topic_related_matrix.toarray())
+        sort_sims = sorted(enumerate(sims), key=lambda f: -f[1])
+        for idx, score in sort_sims[:topk]:
+            text_id = self.idx2id(idx, field)
+            cands.append({'id': text_id,
+                          'score': score})
+        return cands
+
+    def rank_from_text1(self, words, field, topk=5):
         cands = []
         ranks = self.rank(words, field, topk)
         for idx, score in ranks:
@@ -44,10 +67,6 @@ class TopicRanker:
             cands.append({'id': text_id,
                           'score': score})
         return cands
-
-    @staticmethod
-    def norm(data):
-        return data / np.sqrt(sum(data * data))
 
     def text2spvec(self, words, field):
         dictionary = self.model['illustration']['dictionary']
