@@ -105,7 +105,6 @@ class StanfordCoreNLP:
         logging.info('The server is available.')
 
     def __del__(self):
-        logging.info('Cleanup...')
         if hasattr(self, 'p'):
             try:
                 parent = psutil.Process(self.p.pid)

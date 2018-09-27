@@ -21,9 +21,9 @@ class NgramTransform:
         else:
             raise ValueError('Invalid mode: %s' % mode)
 
-    def get_ngrams(self, words, n=1, filter=True, as_strings=True):
+    def get_ngrams(self, words, n=1, filter_fn=True, as_strings=True):
         def _skip(gram):
-            if filter:
+            if filter_fn:
                 return self.filter_ngram(gram)
             else:
                 return False

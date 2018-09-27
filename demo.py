@@ -18,7 +18,7 @@ if __name__ == '__main__':
     nt = NgramTransform()
     tokenizer = tokenize.get_class('corenlp')()
     # td.run(raw_file, prepro_file, tokenizer)
-
+    ds.build_tfidf()
     # print(da.data)
 
     words = tokenizer.segment(text)
