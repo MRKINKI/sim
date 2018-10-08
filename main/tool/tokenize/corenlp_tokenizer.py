@@ -13,5 +13,10 @@ class CoreNLPTokenizer:
             return [], [], [], []
         return deps, words, postags, netags
 
-    def segment(self, text):
-        return self.corenlp.word_tokenize(text) if text.strip() else []
+    def segment(self, text, character=False):
+        if not text.strip():
+            return []
+        elif character:
+            return list(text)
+        else:
+            return self.corenlp.word_tokenize(text)
