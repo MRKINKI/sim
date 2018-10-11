@@ -188,4 +188,4 @@ class DataVocabs:
 
     def get_tgt_vocab(self, name):
         if name not in self.tgt_vocab_dict:
-            self.tgt_vocab_dict[name] = Vocab(lower=True)
+            self.tgt_vocab_dict[name] = Vocab(initial_tokens=True, lower=True)

@@ -13,8 +13,8 @@ class TfidfRanker(object):
         self.model = pickle.load(open(model_path, 'rb'))
         self.strict = strict
         
-    def idx2id(self, idx, field):
-        return self.model[field]['idx2id'][idx]
+    def idx2id(self, idx):
+        return self.model['idx2id'][idx]
 
     def rank(self, words, field, k=1):
         spvec = self.text2spvec(words, field)
@@ -44,13 +44,41 @@ class TfidfRanker(object):
                           'score': score})
         return cands
 
-    def rank_from_id(self, text_id, field, topk=5):
-        cands = []
-        idx = self.model[field]['id2idx'][text_id]
-        scores = self.model[field]['sim_matrix'][idx].toarray().squeeze()
-        ranks = np.argsort(-scores)
+    def get_rank_id_score(self, idxes):
+        spvecs = self.model['tfidf_matrix'][idxes, :]
+        scores = spvecs.dot(self.model['tfidf_matrix'].T)
+        scores = scores.toarray().squeeze()
+        return scores, np.argsort(-scores)
+
+    def combine_score_id(self, scores, ranks, topk):
+        score_id = []
         for idx in ranks[:topk]:
-            text_id = self.idx2id(idx, field)
+            text_id = self.idx2id(idx)
+            score = scores[idx]
+            score_id.append((text_id, score))
+        return score_id
+
+    def rank_all(self, topk=5):
+        batch_size = 1000
+        term_dict = {}
+        for i in range(0, self.model['tfidf_matrix'].shape[0], batch_size):
+            idxes = list(range(i, min(i+batch_size, self.model['tfidf_matrix'].shape[0])))
+            # print(idxes)
+            scores, ranks = self.get_rank_id_score(idxes)
+            for idx in range(len(idxes)):
+                term_id = self.idx2id(i+idx)
+                term_dict[term_id] = self.combine_score_id(scores[idx], ranks[idx], topk)
+            print(i)
+        return term_dict
+
+    def rank_from_id(self, text_id, topk=5):
+        cands = []
+        idx = self.model['id2idx'][text_id]
+        # scores = self.model['sim_matrix'][idx].toarray().squeeze()
+        # ranks = np.argsort(-scores)
+        scores, ranks = self.get_rank_id_score([idx])
+        for idx in ranks[:topk]:
+            text_id = self.idx2id(idx)
             score = scores[idx]
             # score = min([score, 1.0])
             cands.append({'id': text_id,

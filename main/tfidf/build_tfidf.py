@@ -18,6 +18,8 @@ class BuildTfidf:
         for idx, sample in enumerate(corpus):
             idx2id[idx] = sample[id_key]
             text_ngrams = sample[field]
+            if isinstance(text_ngrams, str):
+                text_ngrams = [text_ngrams]
             counts = Counter([mhash(gram, self.hash_size) for gram in text_ngrams])
             col.extend(counts.keys())
             row.extend([idx] * len(counts))
@@ -63,14 +65,14 @@ class BuildTfidf:
         count_matrix, idx2id = self.get_count_matrix(corpus, id_key, field)
         tfidf_matrix, freqs = self.get_tfidf_matrix(count_matrix)
         tfidf_matrix = self.matrix_norm(tfidf_matrix)
-        sim_matrix = self.get_sim_matrix(tfidf_matrix)
+        # sim_matrix = self.get_sim_matrix(tfidf_matrix)
         metadata = {
             'idx2id': idx2id,
             'id2idx': {text_id: idx for idx, text_id in idx2id.items()},
             'freqs': freqs,
             'tfidf_matrix': tfidf_matrix,
             'hash_size': self.hash_size,
-            'sim_matrix': sim_matrix,
+            # 'sim_matrix': sim_matrix,
         }
         return metadata
         # pickle.dump(metadata, open(metadata_file, 'wb'))

@@ -39,9 +39,17 @@ class Chain:
         chains = []
         preds = []
         for i in range(classification_model_num):
-            chains.append(LogisticRegression(C=10, class_weight='balanced', n_jobs=-1))
+            chains.append(LogisticRegression(C=10,
+                                             # solver='lbfgs',
+                                             solver='liblinear',
+                                             class_weight='balanced',
+                                             # multi_class='multinomial',
+                                             # multi_class='ovr',
+                                             max_iter=1000,
+                                             n_jobs=-1))
 
         chain_train_x = train_x
+        print(chain_train_x.shape)
         for chain, tgt_field in zip(chains, chain_tgt_fields):
             print(tgt_field)
             chain.fit(chain_train_x, raw_train['y'][tgt_field])
@@ -62,15 +70,3 @@ class Chain:
             chain_test_x = sp.hstack([chain_test_x, test_pred_pro])
             print(tgt_field)
             print(metrics.classification_report(raw_test['y'][tgt_field], preds, digits=4))
-
-    def predict(self, test_x):
-        chain_test_x = test_x
-        all_preds = []
-        for chain, tgt_field in zip(self.chains, self.chain_tgt_fields):
-            preds = chain.predict(chain_test_x)
-            all_preds.append(preds)
-            test_pred_pro = sp.csr_matrix(chain.predict_proba(chain_test_x))
-            chain_test_x = sp.hstack([chain_test_x, test_pred_pro])
-        all_preds_concat = np.array(all_preds).T
-        return all_preds_concat
-
