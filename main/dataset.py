@@ -120,26 +120,33 @@ class Dataset:
 
     def transform(self, input_file, output_file, src_fields, tgt_fields, predict=False):
         X, Y = [], collections.defaultdict(list)
+        filter_num = 0
         with open(input_file, encoding='utf-8') as fin:
             for line in fin:
                 sample = json.loads(line.strip())
                 if not predict:
-                    for tgt_field in tgt_fields:
-                        tgts = sample[tgt_field]
-                        # print(tgt_field, tgts)
-                        if isinstance(tgts, list):
-                            Y[tgt_field].append(self.vocab.tgt_vocab_dict[tgt_field].convert_to_ids(tgts))
-                        else:
-                            Y[tgt_field].append(self.vocab.tgt_vocab_dict[tgt_field].get_id(tgts))
+                    try:
+                        for tgt_field in tgt_fields:
+                            tgts = sample[tgt_field]
+                            # print(tgt_field, tgts)
+                            if isinstance(tgts, list):
+                                Y[tgt_field].append(self.vocab.tgt_vocab_dict[tgt_field].convert_to_ids(tgts))
+                            else:
+                                Y[tgt_field].append(self.vocab.tgt_vocab_dict[tgt_field].get_id(tgts))
+                    except KeyError:
+                        filter_num += 1
+                        continue
 
                 x = []
                 for src_field in src_fields:
                     features = [src_field + '@' + gram for gram in sample[src_field]]
                     x.extend(self.vocab.src_vocab.convert_to_ids(features))
                 X.append(x)
+        print(filter_num)
         pickle.dump({'x': X,
                      'y': Y,
-                     'src_size': self.vocab.src_vocab.size()}, open(output_file, 'wb'))
+                     'src_size': self.vocab.src_vocab.size()},
+                    open(output_file, 'wb'))
 
     def build_tfidf_model(self):
         for field in self.tfidf_fields:

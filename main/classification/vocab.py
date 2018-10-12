@@ -44,18 +44,14 @@ class Vocab(object):
             self.add(token)
 
     def get_id(self, token):
-        """
-        gets the id of a token, returns the id of unk token if token is not in vocab
-        Args:
-            key: a string indicating the word
-        Returns:
-            an integer
-        """
         token = token.lower() if self.lower else token
         try:
             return self.token2id[token]
         except KeyError:
-            return self.token2id[self.unk_token]
+            if self.initial_tokens:
+                return self.token2id[self.unk_token]
+            else:
+                raise KeyError
 
     def get_token(self, idx):
         """
@@ -188,4 +184,4 @@ class DataVocabs:
 
     def get_tgt_vocab(self, name):
         if name not in self.tgt_vocab_dict:
-            self.tgt_vocab_dict[name] = Vocab(initial_tokens=True, lower=True)
+            self.tgt_vocab_dict[name] = Vocab(initial_tokens=False, lower=True)
