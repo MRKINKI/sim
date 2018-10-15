@@ -14,5 +14,5 @@ class BuildWord2Vec:
 
     def train(self, corpus, field):
         texts = self.get_texts(corpus, field)
-        model = Word2Vec(texts, iter=20)
+        model = Word2Vec(texts, size=100, iter=20)
         return model

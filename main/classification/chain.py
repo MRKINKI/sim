@@ -45,8 +45,8 @@ class Chain:
         chains = []
         choose_feature_list = []
         train_chain_pred_history = sp.csr_matrix([])
-        feature_num = 1000
-        model_type = 'lr'
+        feature_num = 20000
+        model_type = 'svm'
         for i in range(classification_model_num):
             chains.append(self.get_model(model_type))
 
@@ -89,9 +89,9 @@ class Chain:
             # preds = chain.predict(chain_test_x)
             # test_pred_pro = sp.csr_matrix(chain.predict_proba(chain_test_x))
             if test_chain_pred_history.shape[1] != 0:
-                chain_test_x = sp.hstack([chain_test_x[:, choose_feature], test_chain_pred_history])
+                chain_test_x = sp.hstack([test_x[:, choose_feature], test_chain_pred_history])
             else:
-                chain_test_x = chain_test_x[:, choose_feature]
+                chain_test_x = test_x[:, choose_feature]
             test_pred_pro, test_pred = self.get_predict(chain, model_type, chain_test_x)
 
             if test_chain_pred_history.shape[1] != 0:
@@ -119,6 +119,7 @@ class Chain:
             return svm.SVC(C=10,
                            kernel='linear',
                            class_weight='balanced',
+                           probability=True,
                            )
         elif model_type == 'xgb':
             return 'xgb'
